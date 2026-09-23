@@ -89,4 +89,39 @@ describe("useAuth", () => {
 
     expect(result.current.user).toBeNull();
   });
+
+  it("localStorage に保存済みのセッションを読み込む", () => {
+    localStorage.setItem(
+      "auth_session",
+      JSON.stringify({
+        id: "u1",
+        email: "saved@example.com",
+        name: "保存済み",
+      }),
+    );
+
+    const { result } = renderHook(() => useAuth());
+
+    expect(result.current.user?.email).toBe("saved@example.com");
+  });
+
+  it("別インスタンスでのログアウトが反映される", async () => {
+    const { result: first } = renderHook(() => useAuth());
+    const { result: second } = renderHook(() => useAuth());
+
+    await act(async () => {
+      await first.current.signup({
+        email: "shared@example.com",
+        password: "password123",
+        name: "ユーザー",
+      });
+    });
+    expect(second.current.user?.email).toBe("shared@example.com");
+
+    act(() => {
+      first.current.logout();
+    });
+
+    expect(second.current.user).toBeNull();
+  });
 });

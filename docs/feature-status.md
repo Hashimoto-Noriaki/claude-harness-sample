@@ -1,6 +1,6 @@
 # 機能実装状況
 
-最終更新: 2026-09-22
+最終更新: 2026-09-24
 
 ## 凡例
 
@@ -39,12 +39,12 @@
 
 ## いいね（likes）
 
-| 機能                      | 状態    | 補足                           |
-| ------------------------- | ------- | ------------------------------ |
-| いいねをつける / 取り消す | ✅ Done | `useLikes.toggle()`            |
-| いいね状態の表示          | ✅ Done | `ProfileCard` 上のハートボタン |
-| いいね状態の永続化        | ✅ Done | localStorage に保存            |
-| いいねした一覧ページ      | 📋 Todo | ページ未実装                   |
+| 機能                      | 状態    | 補足                                              |
+| ------------------------- | ------- | ------------------------------------------------- |
+| いいねをつける / 取り消す | ✅ Done | `useLikes.toggle()`                               |
+| いいね状態の表示          | ✅ Done | `LikeButton`（`ProfileCard` の `actions` に渡す） |
+| いいね状態の永続化        | ✅ Done | localStorage に保存                               |
+| いいねした一覧ページ      | 📋 Todo | ページ未実装                                      |
 
 ---
 
@@ -84,6 +84,6 @@
 | ------------- | ------- | ------------------------- |
 | `useAuth`     | ✅ Done | `useAuth.test.ts`         |
 | `ProfileCard` | ✅ Done | `ProfileCard.test.tsx`    |
-| `useLikes`    | 📋 Todo | テストなし                |
-| `useStocks`   | 📋 Todo | テストなし                |
+| `useLikes`    | ✅ Done | `useLikes.test.ts`        |
+| `LikeButton`  | ✅ Done | `LikeButton.test.tsx`     |
 | E2E           | 📋 Todo | `e2e/` ディレクトリ未作成 |

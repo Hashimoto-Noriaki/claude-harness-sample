@@ -33,7 +33,22 @@ describe("ProfileCard", () => {
   it("プロフィール画像が alt 付きで表示される", () => {
     render(<ProfileCard profile={profile} />);
 
-    const image = screen.getByRole("img", { name: "山田 花子" });
-    expect(image).toHaveAttribute("src", profile.imageUrl);
+    const image = screen.getByRole("img", {
+      name: "山田 花子のプロフィール写真",
+    });
+    // next/image は最適化用の URL に変換するため、元画像のパスを url パラメータで確認する
+    const src = new URL(image.getAttribute("src") ?? "", "http://localhost");
+    expect(src.searchParams.get("url")).toBe(profile.imageUrl);
+  });
+
+  it("actions に渡した要素が表示される", () => {
+    render(
+      <ProfileCard
+        profile={profile}
+        actions={<button type="button">いいね</button>}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "いいね" })).toBeInTheDocument();
   });
 });
