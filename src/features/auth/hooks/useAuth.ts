@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useMemo, useSyncExternalStore } from "react";
 import type { LoginInput, SignupInput, User } from "@/features/auth/types";
 
 const USERS_KEY = "auth_users";
@@ -26,15 +26,39 @@ function writeUsers(users: User[]): void {
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
 }
 
-export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
+// 複数のコンポーネントが別々に useAuth を使うため、セッション変更を全インスタンスに通知する
+const listeners = new Set<() => void>();
 
-  useEffect(() => {
-    const raw = localStorage.getItem(SESSION_KEY);
-    if (raw) {
-      setUser(JSON.parse(raw) as User);
-    }
-  }, []);
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+// 毎回 parse すると参照が変わり再レンダリングが止まらないため、文字列のまま返す
+function getSnapshot(): string | null {
+  return localStorage.getItem(SESSION_KEY);
+}
+
+function getServerSnapshot(): string | null {
+  return null;
+}
+
+function writeSession(user: User | null): void {
+  if (user) {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+  } else {
+    localStorage.removeItem(SESSION_KEY);
+  }
+  for (const listener of listeners) {
+    listener();
+  }
+}
+
+export function useAuth() {
+  const raw = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const user = useMemo(() => (raw ? (JSON.parse(raw) as User) : null), [raw]);
 
   const signup = useCallback(async (input: SignupInput): Promise<User> => {
     const users = readUsers();
@@ -53,8 +77,7 @@ export function useAuth() {
       `${PASSWORD_KEY_PREFIX}${newUser.id}`,
       await hashPassword(input.password),
     );
-    localStorage.setItem(SESSION_KEY, JSON.stringify(newUser));
-    setUser(newUser);
+    writeSession(newUser);
 
     return newUser;
   }, []);
@@ -71,15 +94,13 @@ export function useAuth() {
       throw new Error("メールアドレスまたはパスワードが正しくありません");
     }
 
-    localStorage.setItem(SESSION_KEY, JSON.stringify(found));
-    setUser(found);
+    writeSession(found);
 
     return found;
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem(SESSION_KEY);
-    setUser(null);
+    writeSession(null);
   }, []);
 
   return { user, signup, login, logout };
